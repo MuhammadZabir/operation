@@ -22,13 +22,13 @@ public class OperationUserExecution extends OperationAction {
     public void execute(SessionFactory sessionFactory, Storage storage) throws Exception {
         Map<String, BigDecimal> userPercentagePoint = storage.getDepartmentPercentage().get(storage.getDepartmentInProgress());
         for (Map.Entry<String, BigDecimal> entry : userPercentagePoint.entrySet()) {
-            String name = entry.getKey();
+            String staffId = entry.getKey();
 
-            Optional<User> optionalUser = RepositoryUtility.findUserByNameAndDepartmentName(sessionFactory, name, storage.getDepartmentInProgress());
+            Optional<User> optionalUser = RepositoryUtility.findUserByStaffIdAndDepartmentName(sessionFactory, staffId, storage.getDepartmentInProgress());
 
             if (!optionalUser.isPresent()) {
-                String errMsg = String.format("The user with an name of [%s] from department [%s] could not be found.",
-                        name, storage.getDepartmentInProgress());
+                String errMsg = String.format("The user with the staff ID of [%s] from department [%s] could not be found.",
+                        staffId, storage.getDepartmentInProgress());
                 logger.error(errMsg, UserNotFoundException::new);
                 throw new UserNotFoundException();
             }
@@ -66,12 +66,11 @@ public class OperationUserExecution extends OperationAction {
                     mapIssuesByStatus.values().stream().flatMap(issues -> issues.stream()).collect(Collectors.toSet()));
 
             BigDecimal totalOptimisedPoint = UserCalculatorUtility.calculateOptimumPoint(mapStatusCategoryByName, mapIssueDifficultyByName,
-                    mapIssuesByStatus.get(applicablePointConfig.getStatusCategories().stream().filter(statusCategory ->
-                            statusCategory.isMain()).findFirst().get()));
+                    mapIssuesByStatus.values().stream().flatMap(issues -> issues.stream()).collect(Collectors.toSet()));
 
             BigDecimal percentageOverall = UserCalculatorUtility.calculatePercentageOverall(totalActualPoint, totalOptimisedPoint);
 
-            userPercentagePoint.put(name, percentageOverall);
+            userPercentagePoint.put(applicableUser.getStaffId(), percentageOverall);
         }
     }
 }

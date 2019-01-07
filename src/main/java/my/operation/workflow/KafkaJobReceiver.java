@@ -2,7 +2,9 @@ package my.operation.workflow;
 
 import my.operation.ApplicationContext;
 import my.operation.domain.kafka.OperationMessage;
+import my.operation.domain.service.ElasticsearchService;
 import my.operation.workflow.action.OperationDepartmentExecution;
+import my.operation.workflow.action.OperationImportDataExecution;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -39,11 +41,11 @@ public class KafkaJobReceiver implements Service {
         properties.setProperty("bootstrap.servers", applicationContext.getProperties().getProperty("kafka.bootstrap.server"));
         properties.setProperty("key.deserializer", StringDeserializer.class.getName());
         properties.setProperty("value.deserializer", OperationMessage.OperationMessageDeserializer.class.getName());
-        properties.setProperty("group.id", applicationContext.getProperties().getProperty(""));
+        properties.setProperty("group.id", applicationContext.getProperties().getProperty("operation.kafka.adhoc.group"));
 
         try (KafkaConsumer<String, OperationMessage> kafkaConsumer = new KafkaConsumer<>(properties)) {
-            kafkaConsumer.subscribe(Collections.singletonList(applicationContext.getProperties().getProperty("")));
-            logger.info("Kafka receiver is running");
+            kafkaConsumer.subscribe(Collections.singletonList(applicationContext.getProperties().getProperty("operation.kafka.adhoc.topic")));
+            System.out.println("Kafka receiver is running");
 
             while (!shutdown.get()) {
                 ConsumerRecords<String, OperationMessage> records = kafkaConsumer.poll(5000L);
@@ -52,17 +54,26 @@ public class KafkaJobReceiver implements Service {
 
                     Storage storage = new Storage();
                     storage.setApplicableCompanyId(message.getId());
+                    storage.setFilename(message.getFilename());
+                    storage.setElasticsearchService(applicationContext.getApplicationService(ElasticsearchService.class));
 
-                    StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure().build();
-
-                    try (SessionFactory sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory()) {
-                        OperationDepartmentExecution operationDepartmentExecution = new OperationDepartmentExecution();
-                        operationDepartmentExecution.execute(sessionFactory, storage);
-                    } catch (Exception e) {
-                        logger.error("There is an error,", e);
-                    }
+                    Thread thread = new Thread(() -> execute(storage));
+                    thread.start();
                 }
             }
+        }
+    }
+
+    private void execute(Storage storage) {
+        StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure().build();
+        try (SessionFactory sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory()) {
+            OperationImportDataExecution operationImportDataExecution = new OperationImportDataExecution();
+            operationImportDataExecution.execute(sessionFactory, storage);
+            OperationDepartmentExecution operationDepartmentExecution = new OperationDepartmentExecution();
+            operationDepartmentExecution.execute(sessionFactory, storage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("There is an error,", e);
         }
     }
 }

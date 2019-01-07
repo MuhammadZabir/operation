@@ -2,9 +2,11 @@ package my.operation.domain.entity.data;
 
 public class DataStorage {
     private String name;
+    private String staffId;
     private String issueName;
     private String description;
     private String difficulty;
+    private String department;
     private String status;
     private String startDate;
     private String endDate;
@@ -16,6 +18,14 @@ public class DataStorage {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(String staffId) {
+        this.staffId = staffId;
     }
 
     public String getIssueName() {
@@ -40,6 +50,14 @@ public class DataStorage {
 
     public void setDifficulty(String difficulty) {
         this.difficulty = difficulty;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
 
     public String getStatus() {
@@ -78,9 +96,11 @@ public class DataStorage {
     public String toString() {
         return "DataStorage{" +
                 "name='" + name + '\'' +
+                ", staffId='" + staffId + '\'' +
                 ", issueName='" + issueName + '\'' +
                 ", description='" + description + '\'' +
                 ", difficulty='" + difficulty + '\'' +
+                ", department='" + department + '\'' +
                 ", status='" + status + '\'' +
                 ", startDate='" + startDate + '\'' +
                 ", endDate='" + endDate + '\'' +

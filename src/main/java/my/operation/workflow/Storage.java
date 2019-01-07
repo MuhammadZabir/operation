@@ -1,5 +1,7 @@
 package my.operation.workflow;
 
+import my.operation.domain.service.ElasticsearchService;
+
 import java.math.BigDecimal;
 import java.util.Map;
 
@@ -11,6 +13,8 @@ public class Storage {
     private String departmentInProgress;
 
     private String filename;
+
+    private ElasticsearchService elasticsearchService;
 
     public Map<String, Map<String, BigDecimal>> getDepartmentPercentage() {
         return departmentPercentage;
@@ -44,6 +48,14 @@ public class Storage {
         this.filename = filename;
     }
 
+    public ElasticsearchService getElasticsearchService() {
+        return elasticsearchService;
+    }
+
+    public void setElasticsearchService(ElasticsearchService elasticsearchService) {
+        this.elasticsearchService = elasticsearchService;
+    }
+
     @Override
     public String toString() {
         return "Storage{" +
@@ -51,6 +63,7 @@ public class Storage {
                 ", applicableCompanyId=" + applicableCompanyId +
                 ", departmentInProgress='" + departmentInProgress + '\'' +
                 ", filename='" + filename + '\'' +
+                ", elasticsearchService=" + elasticsearchService +
                 '}';
     }
 }

@@ -3,6 +3,7 @@ package my.operation.domain.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import my.operation.domain.entity.Issue;
 import my.operation.domain.entity.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +37,9 @@ public class ElasticsearchService implements ApplicationService {
         hostname = clusterNodes[0];
         port = Integer.valueOf(clusterNodes[1]);
         String userIndex = properties.getProperty("user.elasticsearch.index");
+        String issueIndex = properties.getProperty("issue.elasticsearch.index");
         ElasticsearchIndex.USER.setIndexName(userIndex);
+        ElasticsearchIndex.ISSUE.setIndexName(issueIndex);
     }
 
     @Override
@@ -92,7 +95,7 @@ public class ElasticsearchService implements ApplicationService {
                             .setId(((User) object).getId().toString())
                             .setSource(objectMapper.writeValueAsBytes(object), XContentType.JSON)
                             .get();
-                    logger.info(SAVE_RESULT_LOG, ((User) object).getStaff_id(), response);
+                    logger.info(SAVE_RESULT_LOG, ((User) object).getStaffId(), response);
                 } catch (JsonProcessingException e) {
                     String errMsg = String.format("An error occurred while trying to cache object of type %s to the index %s for searching. The object is %s",
                             object.getClass(),
@@ -117,7 +120,54 @@ public class ElasticsearchService implements ApplicationService {
                         .setType(INDEX_TYPE)
                         .setId(((User) object).getId().toString())
                         .get();
-                logger.info(SAVE_RESULT_LOG, ((User) object).getStaff_id(), response);
+                logger.info(SAVE_RESULT_LOG, ((User) object).getStaffId(), response);
+            }
+        },
+        ISSUE(Issue.class) {
+            @Override
+            void save(TransportClient elasticsearchClient, ObjectMapper objectMapper, Object object) {
+                if (!(object instanceof Issue)) {
+                    logger.warn("An attempt to save an object of type {} to the index {} has been blocked. " +
+                                    "The object {} cannot be searched",
+                            object.getClass(),
+                            this.getIndexName(),
+                            object.toString());
+                    return;
+                }
+
+                try {
+                    IndexResponse response = elasticsearchClient.prepareIndex()
+                            .setIndex(this.getIndexName())
+                            .setType(INDEX_TYPE)
+                            .setId(((Issue) object).getId().toString())
+                            .setSource(objectMapper.writeValueAsBytes(object), XContentType.JSON)
+                            .get();
+                    logger.info(SAVE_RESULT_LOG, ((Issue) object).getName(), response);
+                } catch (JsonProcessingException e) {
+                    String errMsg = String.format("An error occurred while trying to cache object of type %s to the index %s for searching. The object is %s",
+                            object.getClass(),
+                            this.getIndexName(),
+                            object.toString());
+                    logger.error(errMsg, e);
+                }
+            }
+
+            @Override
+            void delete(TransportClient elasticsearchClient, Object object) {
+                if (!(object instanceof Issue)) {
+                    logger.warn("An attempt to delete an object of type {} to the index {} has been blocked. The object {} cannot be searched",
+                            object.getClass(),
+                            this.getIndexName(),
+                            object.toString());
+                    return;
+                }
+
+                DeleteResponse response = elasticsearchClient.prepareDelete()
+                        .setIndex(this.getIndexName())
+                        .setType(INDEX_TYPE)
+                        .setId(((Issue) object).getId().toString())
+                        .get();
+                logger.info(SAVE_RESULT_LOG, ((Issue) object).getName(), response);
             }
         };
 

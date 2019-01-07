@@ -52,6 +52,6 @@ public class UserCalculatorUtility {
     }
 
     public static BigDecimal calculatePercentageOverall(BigDecimal actualPoint, BigDecimal optimumPoint) {
-        return actualPoint.divide(optimumPoint).multiply(new BigDecimal(100)).setScale(2, RoundingMode.HALF_UP);
+        return actualPoint.divide(optimumPoint, 2, RoundingMode.HALF_UP).multiply(new BigDecimal(100)).setScale(2, RoundingMode.HALF_UP);
     }
 }
