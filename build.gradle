@@ -5,13 +5,13 @@ buildscript {
     }
     dependencies {
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
     }
 }
 
 plugins {
     id 'java'
     id "org.sonarqube" version "2.6"
-    id "com.github.johnrengelman.plugin-shadow" version "2.0.3"
 }
 
 version '0.1-SNAPSHOT'
@@ -28,6 +28,16 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'com.github.johnrengelman.shadow'
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'my.operation.OperationApplication'
+    }
+}
+
+shadowJar {
+    zip64 true
+}
 
 dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.1'

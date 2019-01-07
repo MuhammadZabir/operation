@@ -45,7 +45,7 @@ public class KafkaJobReceiver implements Service {
 
         try (KafkaConsumer<String, OperationMessage> kafkaConsumer = new KafkaConsumer<>(properties)) {
             kafkaConsumer.subscribe(Collections.singletonList(applicationContext.getProperties().getProperty("operation.kafka.adhoc.topic")));
-            System.out.println("Kafka receiver is running");
+            logger.info("Kafka receiver is running");
 
             while (!shutdown.get()) {
                 ConsumerRecords<String, OperationMessage> records = kafkaConsumer.poll(5000L);
@@ -72,7 +72,6 @@ public class KafkaJobReceiver implements Service {
             OperationDepartmentExecution operationDepartmentExecution = new OperationDepartmentExecution();
             operationDepartmentExecution.execute(sessionFactory, storage);
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error("There is an error,", e);
         }
     }
